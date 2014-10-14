@@ -24,22 +24,22 @@ public class HelloWord {
     JsonDocument doc = JsonDocument.create("walter", user);
 
     //insert doc in bucket, updating it if it exists (upsert)
+    //as everything will be done asynchronously, we need some tricks to be deterministic in regard to following reads
+    //we could use a CountDownLatch, but Rx allows blocking semantics with toBlocking(), which has the same spirit.
     bucket.async()
         .upsert(doc)
-        .subscribe(jsonDoc -> System.out.printf("Persisted doc wit CAS %s vs %s\n", jsonDoc.cas(), doc.cas()));
+        .doOnNext(jsonDocument -> System.out.printf("Persisted doc wit CAS %s vs %s\n", jsonDocument.cas(), doc.cas()))
+        .toBlocking().single(); //blocks and returns the only result (would throw an exception if <> 1 result)
 
-    //retrieve the document and show data
+    //retrieve the document and show data, this one is fire-and-forget
     bucket.async()
         .get("walter")
-        .subscribe(jsonDocument -> {
-            System.out.println("Found: " + jsonDocument);
-            System.out.println("Age: " + jsonDocument.content().getInt("age"));
-        });
-
-    //for this simple example, in order to see anything before the thread exits we will wait using a latch
-    CountDownLatch latch = new CountDownLatch(1);
+        .subscribe(result -> System.out.printf("Found: %s\nAge: %d\n", result, doc.content().getInt("age")));
 
     //get-and-update operation
+    //here we will use a subscription to execute the flow and display result, which cannot be used with blocking observables...
+    //so in order to see anything before the thread exits we will wait using a latch
+    CountDownLatch latch = new CountDownLatch(1);
     bucket
         .async()
         .get("walter")
