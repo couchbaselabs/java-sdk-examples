@@ -1,4 +1,4 @@
-package com.couchbase.client.async;
+package com.couchbase.client.examples.async;
 
 import java.util.NoSuchElementException;
 

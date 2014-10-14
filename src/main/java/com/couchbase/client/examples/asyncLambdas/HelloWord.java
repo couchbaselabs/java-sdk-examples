@@ -1,4 +1,4 @@
-package com.couchbase.client.async;
+package com.couchbase.client.examples.asyncLambdas;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -7,10 +7,6 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
-
-import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
 
 public class HelloWord {
 
@@ -32,23 +28,13 @@ public class HelloWord {
     //we could use a CountDownLatch, but Rx allows blocking semantics with toBlocking(), which has the same spirit.
     bucket.async()
         .upsert(doc)
-        .doOnNext(new Action1<JsonDocument>() {
-          @Override
-          public void call(JsonDocument jsonDocument) {
-            System.out.printf("Persisted doc wit CAS %s vs %s\n", jsonDocument.cas(), doc.cas());
-          }
-        })
+        .doOnNext(jsonDocument -> System.out.printf("Persisted doc wit CAS %s vs %s\n", jsonDocument.cas(), doc.cas()))
         .toBlocking().single(); //blocks and returns the only result (would throw an exception if <> 1 result)
 
     //retrieve the document and show data, this one is fire-and-forget
     bucket.async()
         .get("walter")
-        .subscribe(new Action1<JsonDocument>() {
-          @Override
-          public void call(JsonDocument result) {
-            System.out.printf("Found: %s\nAge: %d\n", result, doc.content().getInt("age"));
-          }
-        });
+        .subscribe(result -> System.out.printf("Found: %s\nAge: %d\n", result, doc.content().getInt("age")));
 
     //get-and-update operation
     //here we will use a subscription to execute the flow and display result, which cannot be used with blocking observables...
@@ -57,19 +43,13 @@ public class HelloWord {
     bucket
         .async()
         .get("walter")
-        .flatMap(new Func1<JsonDocument, Observable<JsonDocument>>() {
-          @Override
-          public Observable<JsonDocument> call(final JsonDocument loaded) {
-            loaded.content().put("age", 52);
-            return bucket.async().replace(loaded);
-          }
+        .flatMap(loaded -> {
+          loaded.content().put("age", 52);
+          return bucket.async().replace(loaded);
         })
-        .subscribe(new Action1<JsonDocument>() {
-          @Override
-          public void call(final JsonDocument updated) {
-            System.out.println("Updated: " + updated.id());
-            latch.countDown();
-          }
+        .subscribe(updated -> {
+          System.out.println("Updated: " + updated.id());
+          latch.countDown();
         });
 
     //wait for the get and update operation to be finished before exiting

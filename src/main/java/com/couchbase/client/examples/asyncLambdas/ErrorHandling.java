@@ -1,4 +1,4 @@
-package com.couchbase.client.asyncLambdas;
+package com.couchbase.client.examples.asyncLambdas;
 
 import java.util.NoSuchElementException;
 

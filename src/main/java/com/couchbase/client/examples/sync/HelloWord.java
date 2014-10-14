@@ -1,4 +1,4 @@
-package com.couchbase.client.sync;
+package com.couchbase.client.examples.sync;
 
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
