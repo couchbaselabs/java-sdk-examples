@@ -27,7 +27,7 @@ public class HelloWord {
         .put("age", 50);
     JsonDocument doc = JsonDocument.create("walter", user);
 
-    //insert doc in bucket, updating it if it exists
+    //insert doc in bucket, updating it if it exists (upsert)
     bucket.async()
         .upsert(doc)
         .doOnNext(new Action1<JsonDocument>() {
@@ -72,8 +72,11 @@ public class HelloWord {
 
     //wait for the get and update operation to be finished before exiting
     latch.await();
+
+    //cleanup (in a synchronous way) and disconnect
+    System.out.println("Cleaning Up");
+    bucket.remove("walter");
     System.out.println("Exiting");
-    //disconnect the client
     cluster.disconnect();
   }
 }

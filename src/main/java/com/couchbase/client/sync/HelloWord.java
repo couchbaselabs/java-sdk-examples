@@ -1,7 +1,5 @@
 package com.couchbase.client.sync;
 
-import java.util.concurrent.CountDownLatch;
-
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
@@ -41,7 +39,10 @@ public class HelloWord {
       System.out.println("Updated: " + updated.id());
     }
 
-    //disconnect the client
+    //cleanup (in a synchronous way) and disconnect
+    System.out.println("Cleaning Up");
+    bucket.remove("walter");
+    System.out.println("Exiting");
     cluster.disconnect();
   }
 }

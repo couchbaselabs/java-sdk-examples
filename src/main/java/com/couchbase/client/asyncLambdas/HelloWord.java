@@ -8,10 +8,6 @@ import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 
-import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
-
 public class HelloWord {
 
   public static void main(String[] args) throws InterruptedException {
@@ -27,7 +23,7 @@ public class HelloWord {
         .put("age", 50);
     JsonDocument doc = JsonDocument.create("walter", user);
 
-    //insert doc in bucket, updating it if it exists
+    //insert doc in bucket, updating it if it exists (upsert)
     bucket.async()
         .upsert(doc)
         .subscribe(jsonDoc -> System.out.printf("Persisted doc wit CAS %s vs %s\n", jsonDoc.cas(), doc.cas()));
@@ -58,8 +54,11 @@ public class HelloWord {
 
     //wait for the get and update operation to be finished before exiting
     latch.await();
+
+    //cleanup (in a synchronous way) and disconnect
+    System.out.println("Cleaning Up");
+    bucket.remove("walter");
     System.out.println("Exiting");
-    //disconnect the client
     cluster.disconnect();
   }
 }
