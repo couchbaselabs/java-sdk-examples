@@ -66,11 +66,13 @@ public class HelloWord {
           @Override
           public void call(final JsonDocument updated) {
             System.out.println("Updated: " + updated.id());
+            latch.countDown();
           }
         });
 
     //wait for the get and update operation to be finished before exiting
     latch.await();
+    System.out.println("Exiting");
     //disconnect the client
     cluster.disconnect();
   }
